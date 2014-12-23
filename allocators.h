@@ -66,10 +66,36 @@ struct constructor
 /**
  * Allocators tags.
  */
+struct tag_allocator_noalloc {};
 struct tag_allocator_new {};
 struct tag_allocator_malloc {};
 struct tag_allocator_calloc {};
-struct tag_allocator_noalloc {};
+
+// ------------------------------------------------------------------------
+
+/**
+ * Allocation attempts throw an exception std::runtime_error.
+ */
+template <class T>
+struct allocator_noalloc
+{
+	CORE_TRAITS(T);
+	typedef allocator_noalloc<T> self;
+	typedef tag_allocator_noalloc tag;
+
+	static ptr_t allocate( unsigned n )
+	{
+		throw std::runtime_error(
+			"ERROR in allocator_noalloc::allocate\n\t"
+			"this allocator prohibits allocations."
+		);
+	}
+
+	static void free( ptr_t ptr, unsigned n )
+	{
+		// do nothing
+	}
+};
 
 // ------------------------------------------------------------------------
 
@@ -94,7 +120,7 @@ struct allocator_new
 	}
 
 	static void free( ptr_t ptr, unsigned n )
-	{ if ( ptr ) {
+	{ if ( ptr && n ) {
 
 		// constructor<T>::destroy( ptr, n ); // called by delete
 		if (n > 1)
@@ -127,7 +153,7 @@ struct allocator_malloc
 	}
 
 	static void free( ptr_t ptr, unsigned n )
-	{ if ( ptr ) {
+	{ if ( ptr && n ) {
 
 		constructor<T>::destroy( ptr, n );
 		std::free( (void*) ptr );			
@@ -136,6 +162,9 @@ struct allocator_malloc
 
 // ------------------------------------------------------------------------
 
+/**
+ * Allocator using calloc.
+ */
 template <class T>
 struct allocator_calloc
 {
@@ -154,34 +183,11 @@ struct allocator_calloc
 	}
 
 	static void free( ptr_t ptr, unsigned n )
-	{ if ( ptr ) {
+	{ if ( ptr && n ) {
 
 		constructor<T>::destroy( ptr, n );
 		std::free( (void*) ptr );
 	} }
-};
-
-// ------------------------------------------------------------------------
-
-template <class T>
-struct allocator_noalloc
-{
-	CORE_TRAITS(T);
-	typedef allocator_noalloc<T> self;
-	typedef tag_allocator_noalloc tag;
-
-	static ptr_t allocate( unsigned n )
-	{
-		throw std::runtime_error(
-			"ERROR in allocator_noalloc::allocate\n\t"
-			"this allocator prohibits allocations."
-		);
-	}
-
-	static void free( ptr_t ptr, unsigned n )
-	{
-		// do nothing
-	}
 };
 
 #endif
