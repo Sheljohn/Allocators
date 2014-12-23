@@ -83,10 +83,10 @@ struct allocator_noalloc
 	typedef allocator_noalloc<T> self;
 	typedef tag_allocator_noalloc tag;
 
-	static ptr_t allocate( unsigned n )
+	static ptr_t alloc( unsigned n )
 	{
 		throw std::runtime_error(
-			"ERROR in allocator_noalloc::allocate\n\t"
+			"ERROR in allocator_noalloc::alloc\n\t"
 			"this allocator prohibits allocations."
 		);
 	}
@@ -109,7 +109,7 @@ struct allocator_new
 	typedef allocator_new<T> self;
 	typedef tag_allocator_new tag;
 
-	static ptr_t allocate( unsigned n )
+	static ptr_t alloc( unsigned n )
 	{
 		ptr_t ptr = NULL;
 
@@ -142,7 +142,7 @@ struct allocator_malloc
 	typedef allocator_malloc<T> self;
 	typedef tag_allocator_malloc tag;
 
-	static ptr_t allocate( unsigned n )
+	static ptr_t alloc( unsigned n )
 	{
 		ptr_t ptr = NULL;
 		
@@ -172,7 +172,7 @@ struct allocator_calloc
 	typedef allocator_calloc<T> self;
 	typedef tag_allocator_calloc tag;
 
-	static ptr_t allocate( unsigned n )
+	static ptr_t alloc( unsigned n )
 	{
 		ptr_t ptr = NULL;
 		
