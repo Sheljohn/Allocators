@@ -53,7 +53,7 @@ In general, you should not use this yourself. This is used internally by _new-ex
 
  - `::operator new( size_t )` and `::operator new( size_t, std::nothrow )` take a size in bytes, and return a `void*` in case of success.
  - In case of failure, the former throws an exception [`std::bad_alloc`][7], the latter returns `NULL`.
- - Use [`::operator new( sizeof(T) )`][8] for a **single** object of type `T` (and [`delete`][9] for release), and [`::operator new( sizeof(T[ size_t ]) )`][10] for **multiple** objects (and [`delete[]`][11] for release).
+ - Use [`::operator new( sizeof(T) )`][8] for a **single** object of type `T` (and [`delete`][9] for release), and [`::operator new( n*sizeof(T) )`][10] for **multiple** objects (and [`delete[]`][11] for release).
 
 These **do not** initialize memory, and in particular they don't call the default-constructor on the allocated objects. Therefore you **MUST initialize ALL the elements manually** before you release the allocation using either `delete` or `delete[]`.
 
@@ -61,29 +61,31 @@ These **do not** initialize memory, and in particular they don't call the defaul
 
 In general, you should not use this yourself. This is used internally by _new-expressions_ (see below).
 
- - Assume `void *ptr = ::operator new( sizeof(T[n]) )` for some type `T` and size `n`;
- - then `::operator new( sizeof(T[n]), ptr )` initializes `n` elements of type `T` starting from `ptr` using the default constructor `T::T()`.
+Assume `void *ptr = ::operator new( n*sizeof(T) )` for some type `T` and size `n`.
+Then `::operator new( n*sizeof(T), ptr )` initializes `n` elements of type `T` starting from `ptr` using the default constructor `T::T()`. Of course `::operator new( sizeof(T), ptr )` does the same for a single element.
 
-There is **no allocation** here, but initialization using the default-constructor.
+There is **no allocation** here, only initialization using the default-constructor.
 
 ## Single-object allocation
 
- - `new T( args )` allocates _and_ initializes memory for a single object of type `T` using the constructor `T::T( args )`. The default constructor will not be called _unless_ arguments are omitted (ie `new T()` or even `new T`). Throws an exception `std::bad_alloc` on failure.
- - Same for `new (std::nothrow) T( args )` except that it returns `NULL` in case of failure.
- - Use `delete` to call the destructor `T::~T()` and release the corresponding memory.
+`new T( args )` allocates _and_ initializes memory for a single object of type `T` using the constructor `T::T( args )`. The default constructor will not be called _unless_ arguments are omitted (ie `new T()` or even `new T`). Throws an exception `std::bad_alloc` on failure.
+
+Same for `new (std::nothrow) T( args )` except that it returns `NULL` in case of failure.
+Use `delete` to call the destructor `T::~T()` and release the corresponding memory.
 
 ## Multiple-objects allocation
 
- - `new T[n]` allocates _and_ initializes memory for a `n` objects of type `T` using the default constructor. Throws an exception `std::bad_alloc` on failure.
- - Idem for `new (std::nothrow) T[n]` except that it returns `NULL` in case of failure.
- - Use `delete[]` to call the destructor `T::~T()` _for each element_ and release the corresponding memory.
+`new T[n]` allocates _and_ initializes memory for a `n` objects of type `T` using the default constructor. Throws an exception `std::bad_alloc` on failure.
+
+Idem for `new (std::nothrow) T[n]` except that it returns `NULL` in case of failure.
+Use `delete[]` to call the destructor `T::~T()` _for each element_ and release the corresponding memory.
 
 ## Memory initialization (placement new)
 
 No allocation here. Regardless of how the allocation was made, you can write: 
 
- - `new (ptr) T(args)` calls the constructor `T::T(args)` on the memory stored at `ptr`. The default constructor is not called unless arguments are omitted.
- - `new (ptr) T[n]` calls the default constructor `T::T()` on `n` objects of type `T` stored from `ptr` to `ptr + sizeof(T[n])`.
+ - `new (ptr) T(args)` which calls the constructor `T::T(args)` on the memory stored at `ptr`. The default constructor is not called unless arguments are omitted.
+ - `new (ptr) T[n]` which calls the default constructor `T::T()` on `n` objects of type `T` stored from `ptr` to `ptr + n*sizeof(T)`.
 
 ---
 
