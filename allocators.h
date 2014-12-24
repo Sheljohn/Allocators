@@ -113,7 +113,7 @@ struct allocator_new
 	{
 		ptr_t ptr = NULL;
 
-		if ( n > 0 && (ptr = (ptr_t)(::operator new( sizeof(T[n]), std::nothrow ))) )
+		if ( n > 0 && (ptr = (ptr_t)(::operator new( n*sizeof(T), std::nothrow ))) )
 			constructor<T>::construct( ptr, n );
 
 		return ptr;
