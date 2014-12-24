@@ -50,8 +50,7 @@ struct constructor
 
 	static void construct( ptr_t p, unsigned n = 1 )
 	{
-		for ( unsigned i = 0; i < n; ++i, ++p ) 
-			new (p) T();
+		::operator new( n*sizeof(T), p );
 	}
 
 	static void destroy( ptr_t p, unsigned n = 1 )
@@ -83,15 +82,15 @@ struct allocator_noalloc
 	typedef allocator_noalloc<T> self;
 	typedef tag_allocator_noalloc tag;
 
-	static ptr_t alloc( unsigned n )
+	static ptr_t allocate( unsigned n )
 	{
 		throw std::runtime_error(
-			"ERROR in allocator_noalloc::alloc\n\t"
+			"ERROR in allocator_noalloc::allocate\n\t"
 			"this allocator prohibits allocations."
 		);
 	}
 
-	static void free( ptr_t ptr, unsigned n )
+	static void release( ptr_t ptr, unsigned n )
 	{
 		// do nothing
 	}
@@ -109,17 +108,17 @@ struct allocator_new
 	typedef allocator_new<T> self;
 	typedef tag_allocator_new tag;
 
-	static ptr_t alloc( unsigned n )
+	static ptr_t allocate( unsigned n )
 	{
 		ptr_t ptr = NULL;
 
-		if ( n > 0 && (ptr = (ptr_t)(::operator new( n*sizeof(T), std::nothrow ))) )
+		if ( n > 0 && (ptr = (ptr_t) ::operator new( n*sizeof(T), std::nothrow )) )
 			constructor<T>::construct( ptr, n );
 
 		return ptr;
 	}
 
-	static void free( ptr_t ptr, unsigned n )
+	static void release( ptr_t ptr, unsigned n )
 	{ if ( ptr && n ) {
 
 		// constructor<T>::destroy( ptr, n ); // called by delete
@@ -142,7 +141,7 @@ struct allocator_malloc
 	typedef allocator_malloc<T> self;
 	typedef tag_allocator_malloc tag;
 
-	static ptr_t alloc( unsigned n )
+	static ptr_t allocate( unsigned n )
 	{
 		ptr_t ptr = NULL;
 		
@@ -152,7 +151,7 @@ struct allocator_malloc
 		return ptr;
 	}
 
-	static void free( ptr_t ptr, unsigned n )
+	static void release( ptr_t ptr, unsigned n )
 	{ if ( ptr && n ) {
 
 		constructor<T>::destroy( ptr, n );
@@ -172,7 +171,7 @@ struct allocator_calloc
 	typedef allocator_calloc<T> self;
 	typedef tag_allocator_calloc tag;
 
-	static ptr_t alloc( unsigned n )
+	static ptr_t allocate( unsigned n )
 	{
 		ptr_t ptr = NULL;
 		
@@ -182,7 +181,7 @@ struct allocator_calloc
 		return ptr;
 	}
 
-	static void free( ptr_t ptr, unsigned n )
+	static void release( ptr_t ptr, unsigned n )
 	{ if ( ptr && n ) {
 
 		constructor<T>::destroy( ptr, n );
