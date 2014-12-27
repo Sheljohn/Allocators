@@ -50,7 +50,8 @@ struct constructor
 
 	static void construct( ptr_t p, unsigned n = 1 )
 	{
-		::operator new( n*sizeof(T), p );
+		for ( unsigned i = 0; i < n; ++i, ++p ) 
+			new (p) T();
 	}
 
 	static void destroy( ptr_t p, unsigned n = 1 )
@@ -110,10 +111,12 @@ struct allocator_new
 
 	static ptr_t allocate( unsigned n )
 	{
-		ptr_t ptr = NULL;
+		ptr_t ptr = nullptr;
 
-		if ( n > 0 && (ptr = (ptr_t) ::operator new( n*sizeof(T), std::nothrow )) )
-			constructor<T>::construct( ptr, n );
+		if ( n > 1 )
+			ptr = new (std::nothrow) T[n];
+		else if ( n == 1 )
+			ptr = new (std::nothrow) T();
 
 		return ptr;
 	}
