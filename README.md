@@ -78,8 +78,6 @@ Then `::operator new( n*sizeof(T), (T*) ptr )` initializes `n` elements of type 
  - Idem for `new (std::nothrow) T[n]` except that it returns `NULL` in case of failure.
  - Use `delete[]` to call the destructor `T::~T()` _for each element_ and release the corresponding memory.
 
-_**Note**_: your should use `delete` and not `delete[]` if you call `new T[1]` or the corresponding no-throw variant.
-
 ## Memory initialization (aka "placement new")
 
 No allocation here. Regardless of how the allocation was made: 
